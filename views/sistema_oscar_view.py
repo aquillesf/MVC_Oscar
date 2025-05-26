@@ -51,7 +51,7 @@ class SistemaOscarView:
     @property
     def voto_view(self):
         return self.__voto_view
-    
+
     @property
     def indicacao_view(self):
         return self.__indicacao_view
@@ -64,7 +64,6 @@ class SistemaOscarView:
         return input("Escolha uma opção: ")
     
     def solicitar_dados_cadastro(self):
-        """Solicita os dados para cadastro de um novo membro"""
         print("\n=== CADASTRO DE MEMBRO ===")
         nome = input("Nome: ").strip()
         

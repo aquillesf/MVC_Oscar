@@ -67,6 +67,9 @@ class SistemaOscarController:
             return True, f"Membro {nome} cadastrado com sucesso!"
         except ValueError as e:
             return False, str(e)
+        except Exception as e:
+            return False, f"Erro inesperado ao cadastrar membro: {str(e)}"
+
     
     def fazer_login(self, nome, senha):
         membro = self.__membro_controller.autenticar(nome, senha)
@@ -139,7 +142,14 @@ class SistemaOscarController:
                 
                 relatorio.append("  Indicados:")
                 for indicado in categoria.indicados:
-                    nome = indicado if isinstance(indicado, str) else indicado.nome
+                    if isinstance(indicado, str):
+                        nome = indicado
+                    elif hasattr(indicado, 'nome'):
+                        nome = indicado.nome
+                    elif hasattr(indicado, 'titulo'):
+                        nome = indicado.titulo
+                    else:
+                        nome = "Desconhecido"
                     relatorio.append(f"    - {nome}")
             else:
                 relatorio.append("  Nenhum indicado cadastrado")
@@ -174,7 +184,17 @@ class SistemaOscarController:
             
             for i, (indicado, votos) in enumerate(resultados, 1):
                 porcentagem = (votos / total_votos * 100) if total_votos > 0 else 0
-                relatorio.append(f"{i}º lugar: {indicado}")
+                
+                if isinstance(indicado, str):
+                    nome_indicado = indicado
+                elif hasattr(indicado, 'nome'):
+                    nome_indicado = indicado.nome
+                elif hasattr(indicado, 'titulo'):
+                    nome_indicado = indicado.titulo
+                else:
+                    nome_indicado = "Desconhecido"
+
+                relatorio.append(f"{i}º lugar: {nome_indicado}")
                 relatorio.append(f"  Votos: {votos} ({porcentagem:.1f}%)")
                 relatorio.append("")
         else:
@@ -182,7 +202,14 @@ class SistemaOscarController:
 
         relatorio.append("--- TODOS OS INDICADOS ---")
         for i, indicado in enumerate(categoria.indicados, 1):
-            nome = indicado if isinstance(indicado, str) else indicado.nome
+            if isinstance(indicado, str):
+                nome = indicado
+            elif hasattr(indicado, 'nome'):
+                nome = indicado.nome
+            elif hasattr(indicado, 'titulo'):
+                nome = indicado.titulo
+            else:
+                nome = "Desconhecido"
             votos = contagem.get(nome, 0)
             relatorio.append(f"{i}. {nome} ({votos} votos)")
         

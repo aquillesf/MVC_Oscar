@@ -167,62 +167,72 @@ class OscarApplication:
                     self.__sistema_view.mostrar_mensagem_erro("Nenhum diretor cadastrado.")
     
     def __votar(self):
-        categoria = self.__sistema_view.categoria_view.selecionar_categoria(
-            self.__sistema_controller.categoria_controller.listar_categorias()
-        )
+        categorias = self.__sistema_controller.categoria_controller.listar_categorias()
+        categoria = self.__sistema_view.categoria_view.selecionar_categoria(categorias)
+
+        if not categoria:
+            self.__sistema_view.mostrar_mensagem_erro("Categoria inválida ou não selecionada.")
+            return
+
+        pode_votar, mensagem = self.__sistema_controller.verificar_elegibilidade_voto(categoria)
+        if not pode_votar:
+            self.__sistema_view.mostrar_mensagem_erro(mensagem)
+            return
+
+        if not categoria.indicados:
+            self.__sistema_view.mostrar_mensagem_erro("Esta categoria não possui indicados.")
+            return
         
-        if categoria:
-            pode_votar, mensagem = self.__sistema_controller.verificar_elegibilidade_voto(categoria)
-            
-            if not pode_votar:
-                self.__sistema_view.mostrar_mensagem_erro(mensagem)
-                return
-            
-            if categoria.indicados:
-                indicado = self.__sistema_view.voto_view.solicitar_voto(categoria)
-                if indicado:
-                    sucesso = self.__sistema_controller.voto_controller.registrar_voto(
-                        self.__sistema_controller.membro_logado, categoria.nome, indicado
-                    )
-                    if sucesso:
-                        self.__sistema_view.mostrar_mensagem_sucesso("Voto registrado com sucesso!")
-                    else:
-                        self.__sistema_view.mostrar_mensagem_erro("Erro ao registrar voto.")
-            else:
-                self.__sistema_view.mostrar_mensagem_erro("Esta categoria não possui indicados.")
+        if not hasattr(self.__sistema_view, 'voto_view'):
+            self.__sistema_view.mostrar_mensagem_erro("Erro interno: voto_view não está disponível.")
+            return
+
+        indicado = self.__sistema_view.voto_view.solicitar_voto(categoria)
+        if not indicado:
+            self.__sistema_view.mostrar_mensagem_erro("Indicado inválido ou não selecionado.")
+            return
+
+        sucesso = self.__sistema_controller.voto_controller.registrar_voto(
+            self.__sistema_controller.membro_logado, categoria.nome, indicado
+        )
+
+        if sucesso:
+            self.__sistema_view.mostrar_mensagem_sucesso("Voto registrado com sucesso!")
+        else:
+            self.__sistema_view.mostrar_mensagem_erro("Erro ao registrar voto.")
     
     def __gerar_relatorio(self):
-        """Gera relatório do sistema"""
-        print("\n=== TIPOS DE RELATÓRIO ===")
-        print("1. Relatório completo")
-        print("2. Relatório por categoria")
-        print("3. Vencedores atuais")
+        relatorio_completo = self.__sistema_controller.gerar_relatorio_completo()
         
-        opcao = input("Escolha uma opção: ")
-        
-        if opcao == "1":
-            relatorio = self.__sistema_controller.gerar_relatorio_completo()
-            self.__sistema_view.mostrar_relatorio(relatorio)
-        elif opcao == "2":
-            categorias = self.__sistema_controller.categoria_controller.listar_categorias()
-            if categorias:
-                categoria = self.__sistema_view.categoria_view.selecionar_categoria(categorias)
-                if categoria:
-                    relatorio = self.__sistema_controller.gerar_relatorio_categoria(categoria.nome)
-                    self.__sistema_view.mostrar_relatorio(relatorio)
-            else:
-                self.__sistema_view.mostrar_mensagem_erro("Nenhuma categoria cadastrada.")
-        elif opcao == "3":
-            vencedores = self.__sistema_controller.obter_vencedores()
-            if isinstance(vencedores, dict) and vencedores:
-                relatorio = "=== VENCEDORES ATUAIS ===\n\n"
-                for categoria, dados in vencedores.items():
-                    relatorio += f"🏆 {categoria}: {dados['indicado']} ({dados['votos']} votos)\n"
-                self.__sistema_view.mostrar_relatorio(relatorio)
-            else:
-                self.__sistema_view.mostrar_mensagem_erro("Nenhum resultado disponível ainda.")
+        categorias = self.__sistema_controller.categoria_controller.listar_categorias()
+        relatorios_categoria = ""
+        if categorias:
+            for categoria in categorias:
+                rel = self.__sistema_controller.gerar_relatorio_categoria(categoria.nome)
+                relatorios_categoria += f"\n--- Relatório da Categoria: {categoria.nome} ---\n"
+                relatorios_categoria += rel + "\n"
         else:
-            self.__sistema_view.mostrar_mensagem_erro("Opção inválida.")
+            relatorios_categoria = "\nNenhuma categoria cadastrada.\n"
+        
+        vencedores = self.__sistema_controller.obter_vencedores()
+        relatorio_vencedores = "\n=== VENCEDORES ATUAIS ===\n"
+        if isinstance(vencedores, dict) and vencedores:
+            for categoria, dados in vencedores.items():
+                relatorio_vencedores += f"🏆 {categoria}: {dados['indicado']} ({dados['votos']} votos)\n"
+        else:
+            relatorio_vencedores += "Nenhum resultado disponível ainda.\n"
+        
+        relatorio_final = (
+            "=== RELATÓRIO COMPLETO ===\n"
+            + relatorio_completo
+            + "\n\n=== RELATÓRIOS POR CATEGORIA ==="
+            + relatorios_categoria
+            + "\n"
+            + relatorio_vencedores
+        )
+        
+        self.__sistema_view.mostrar_relatorio(relatorio_final)
+
     
     def __alterar_senha(self):
         dados = self.__sistema_view.solicitar_alteracao_senha()
@@ -244,7 +254,6 @@ def main():
     print(" ")
     print("=== SISTEMA DE VOTAÇÃO DO OSCAR ===")
     print("Bem-vindo ao sistema de gerenciamento do Oscar!")
-    print("Agora com sistema de autenticação seguro!\n")
     
     app = OscarApplication()
     app.executar()
