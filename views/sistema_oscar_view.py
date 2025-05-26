@@ -87,14 +87,12 @@ class SistemaOscarView:
         return nome, tipo, senha
     
     def solicitar_dados_login(self):
-        """Solicita os dados para login"""
         print("\n=== LOGIN ===")
         nome = input("Nome: ").strip()
         senha = input("Senha: ")
         return nome, senha
     
     def mostrar_menu_logado(self, permissoes):
-        """Mostra o menu baseado nas permissões do usuário"""
         print(f"\n=== MENU PRINCIPAL - {permissoes['nome']} ({permissoes['tipo']}) ===")
         
         opcoes = []
@@ -118,7 +116,6 @@ class SistemaOscarView:
         return escolha if escolha in opcoes else None
     
     def solicitar_alteracao_senha(self):
-        """Solicita os dados para alteração de senha"""
         print("\n=== ALTERAR SENHA ===")
         senha_atual = input("Senha atual: ")
         nova_senha = input("Nova senha: ")

@@ -71,6 +71,8 @@ class SistemaOscarController:
             return False, f"Erro inesperado ao cadastrar membro: {str(e)}"
 
     
+
+
     def fazer_login(self, nome, senha):
         membro = self.__membro_controller.autenticar(nome, senha)
         if membro:
@@ -272,7 +274,6 @@ class SistemaOscarController:
         return vencedores
     
     def resetar_votacao(self):
-        """Reseta a votação (apenas para administradores)"""
         if not self.verificar_autenticacao():
             return False, "Acesso negado. Faça login primeiro."
         self.__voto_controller = VotoController(self.__categoria_controller)
@@ -283,7 +284,6 @@ class SistemaOscarController:
         return True, "Votação resetada com sucesso."
     
     def validar_sistema(self):
-        """Valida o sistema"""
         if not self.verificar_autenticacao():
             return ["Acesso negado. Faça login primeiro."]
         
