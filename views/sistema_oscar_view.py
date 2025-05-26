@@ -63,25 +63,73 @@ class SistemaOscarView:
         print("3. Sair")
         return input("Escolha uma opção: ")
     
-    def mostrar_menu_logado(self, membro):
-        print("\n=== MENU PRINCIPAL ===")
+    def solicitar_dados_cadastro(self):
+        """Solicita os dados para cadastro de um novo membro"""
+        print("\n=== CADASTRO DE MEMBRO ===")
+        nome = input("Nome: ").strip()
+        
+        print("\nTipos de membro:")
+        print("1. VOTADOR (pode votar)")
+        print("2. REGISTRADOR (pode registrar filmes/indicações)")
+        
+        opcao_tipo = input("Escolha o tipo (1 ou 2): ")
+        tipo = 'VOTADOR' if opcao_tipo == '1' else 'REGISTRADOR' if opcao_tipo == '2' else None
+        
+        if not tipo:
+            return None, None, None
+        
+        senha = input("Senha: ")
+        confirmar_senha = input("Confirme a senha: ")
+        
+        if senha != confirmar_senha:
+            print("Senhas não coincidem!")
+            return None, None, None
+        
+        return nome, tipo, senha
+    
+    def solicitar_dados_login(self):
+        """Solicita os dados para login"""
+        print("\n=== LOGIN ===")
+        nome = input("Nome: ").strip()
+        senha = input("Senha: ")
+        return nome, senha
+    
+    def mostrar_menu_logado(self, permissoes):
+        """Mostra o menu baseado nas permissões do usuário"""
+        print(f"\n=== MENU PRINCIPAL - {permissoes['nome']} ({permissoes['tipo']}) ===")
         
         opcoes = []
-        if membro.pode_registrar():
+        
+        if permissoes['pode_registrar']:
             print("1. Adicionar Filme")
             print("2. Adicionar Ator/Atriz")
             print("3. Adicionar Indicação")
             opcoes.extend(['1', '2', '3'])
         
-        if membro.pode_votar():
+        if permissoes['pode_votar']:
             print("4. Votar em uma categoria")
             opcoes.append('4')
         
         print("5. Gerar relatório")
-        print("6. Logout")
-        opcoes.extend(['5', '6'])
+        print("6. Alterar senha")
+        print("7. Logout")
+        opcoes.extend(['5', '6', '7'])
         
-        return input("Escolha uma opção: ")
+        escolha = input("Escolha uma opção: ")
+        return escolha if escolha in opcoes else None
+    
+    def solicitar_alteracao_senha(self):
+        """Solicita os dados para alteração de senha"""
+        print("\n=== ALTERAR SENHA ===")
+        senha_atual = input("Senha atual: ")
+        nova_senha = input("Nova senha: ")
+        confirmar_nova = input("Confirme a nova senha: ")
+        
+        if nova_senha != confirmar_nova:
+            print("Senhas não coincidem!")
+            return None, None
+        
+        return senha_atual, nova_senha
     
     def mostrar_relatorio(self, relatorio):
         print("\n" + relatorio)
@@ -92,3 +140,8 @@ class SistemaOscarView:
     
     def mostrar_mensagem_erro(self, mensagem):
         print(f"✗ {mensagem}")
+    
+    def confirmar_acao(self, mensagem):
+        """Solicita confirmação para uma ação"""
+        resposta = input(f"{mensagem} (s/n): ").lower()
+        return resposta in ['s', 'sim', 'y', 'yes']

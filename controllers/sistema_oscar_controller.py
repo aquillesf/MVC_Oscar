@@ -1,4 +1,3 @@
-# controllers/sistema_oscar_controller.py
 from controllers.pessoa_controller import PessoaController
 from controllers.artista_controller import ArtistaController
 from controllers.diretor_controller import DiretorController
@@ -8,6 +7,7 @@ from controllers.categoria_controller import CategoriaController
 from controllers.membro_controller import MembroController
 from controllers.voto_controller import VotoController
 from controllers.indicacao_controller import IndicacaoController
+
 class SistemaOscarController:
     def __init__(self):
         self.__pessoa_controller = PessoaController()
@@ -19,6 +19,7 @@ class SistemaOscarController:
         self.__membro_controller = MembroController()
         self.__voto_controller = VotoController(self.__categoria_controller)
         self.__indicacao_controller = IndicacaoController(self.__categoria_controller)
+        self.__membro_logado = None
     
     @property
     def pessoa_controller(self):
@@ -56,8 +57,61 @@ class SistemaOscarController:
     def indicacao_controller(self):
         return self.__indicacao_controller
     
+    @property
+    def membro_logado(self):
+        return self.__membro_logado
+    
+    def cadastrar_membro(self, nome, tipo, senha):
+        try:
+            membro = self.__membro_controller.criar_membro(nome, tipo, senha)
+            return True, f"Membro {nome} cadastrado com sucesso!"
+        except ValueError as e:
+            return False, str(e)
+    
+    def fazer_login(self, nome, senha):
+        membro = self.__membro_controller.autenticar(nome, senha)
+        if membro:
+            self.__membro_logado = membro
+            return True, f"Login realizado com sucesso! Bem-vindo, {nome}."
+        return False, "Nome de usuário ou senha incorretos."
+    
+    def fazer_logout(self):
+        if self.__membro_logado:
+            nome = self.__membro_logado.nome
+            self.__membro_logado = None
+            return True, f"Logout realizado com sucesso! Até logo, {nome}."
+        return False, "Nenhum usuário está logado."
+    
+    def alterar_senha(self, senha_atual, nova_senha):
+        if not self.__membro_logado:
+            return False, "Nenhum usuário está logado."
+        
+        sucesso = self.__membro_controller.alterar_senha_membro(
+            self.__membro_logado.nome, senha_atual, nova_senha
+        )
+        
+        if sucesso:
+            return True, "Senha alterada com sucesso!"
+        return False, "Senha atual incorreta."
+    
+    def verificar_autenticacao(self):
+        return self.__membro_logado is not None
+    
+    def obter_permissoes_usuario(self):
+        if not self.__membro_logado:
+            return {'pode_votar': False, 'pode_registrar': False}
+        
+        return {
+            'pode_votar': self.__membro_logado.pode_votar(),
+            'pode_registrar': self.__membro_logado.pode_registrar(),
+            'nome': self.__membro_logado.nome,
+            'tipo': self.__membro_logado.tipo
+        }
+    
     def gerar_relatorio_completo(self):
-        """Gera um relatório completo do sistema"""
+        if not self.verificar_autenticacao():
+            return "Acesso negado. Faça login primeiro."
+        
         relatorio = []
         relatorio.append("=== RELATÓRIO COMPLETO DO SISTEMA OSCAR ===\n")
         
@@ -93,7 +147,9 @@ class SistemaOscarController:
         return "\n".join(relatorio)
     
     def gerar_relatorio_categoria(self, nome_categoria):
-        """Gera relatório específico de uma categoria"""
+        if not self.verificar_autenticacao():
+            return "Acesso negado. Faça login primeiro."
+        
         categoria = self.__categoria_controller.buscar_categoria(nome_categoria)
         if not categoria:
             return "Categoria não encontrada."
@@ -104,8 +160,7 @@ class SistemaOscarController:
         if not categoria.indicados:
             relatorio.append("Nenhum indicado cadastrado para esta categoria.")
             return "\n".join(relatorio)
-        
-        # Contagem de votos
+
         contagem = self.__voto_controller.contar_votos_categoria(categoria)
         total_votos = sum(contagem.values())
         
@@ -124,8 +179,7 @@ class SistemaOscarController:
                 relatorio.append("")
         else:
             relatorio.append("Nenhum voto registrado ainda.")
-        
-        # Lista todos os indicados
+
         relatorio.append("--- TODOS OS INDICADOS ---")
         for i, indicado in enumerate(categoria.indicados, 1):
             nome = indicado if isinstance(indicado, str) else indicado.nome
@@ -134,21 +188,30 @@ class SistemaOscarController:
         
         return "\n".join(relatorio)
     
-    def obter_estatisticas_membro(self, membro):
-        """Retorna estatísticas de um membro específico"""
+    def obter_estatisticas_membro(self, membro=None):
+        if not self.verificar_autenticacao():
+            return None
+        
+        if membro is None:
+            membro = self.__membro_logado
+        
         votos_membro = [v for v in self.__voto_controller.listar_votos() if v.membro == membro]
         
-        estatiscas = {
+        estatisticas = {
             'total_votos': len(votos_membro),
             'categorias_votadas': [v.categoria.nome for v in votos_membro],
             'pode_votar': membro.pode_votar(),
             'pode_registrar': membro.pode_registrar()
         }
         
-        return estatiscas
+        return estatisticas
     
-    def verificar_elegibilidade_voto(self, membro, categoria):
-        """Verifica se um membro pode votar em uma categoria específica"""
+    def verificar_elegibilidade_voto(self, categoria):
+        if not self.verificar_autenticacao():
+            return False, "Usuário não está logado."
+        
+        membro = self.__membro_logado
+        
         if not membro.pode_votar():
             return False, "Membro não tem permissão para votar."
         
@@ -159,12 +222,14 @@ class SistemaOscarController:
                           if v.membro == membro and v.categoria == categoria]
         
         if votos_categoria:
-            return False, "Membro já votou nesta categoria."
+            return False, "Você já votou nesta categoria."
         
-        return True, "Membro pode votar nesta categoria."
+        return True, "Você pode votar nesta categoria."
     
     def obter_vencedores(self):
-        """Retorna os vencedores de cada categoria (quem tem mais votos)"""
+        if not self.verificar_autenticacao():
+            return "Acesso negado. Faça login primeiro."
+        
         vencedores = {}
         
         for categoria in self.__categoria_controller.listar_categorias():
@@ -180,16 +245,26 @@ class SistemaOscarController:
         return vencedores
     
     def resetar_votacao(self):
+        """Reseta a votação (apenas para administradores)"""
+        if not self.verificar_autenticacao():
+            return False, "Acesso negado. Faça login primeiro."
         self.__voto_controller = VotoController(self.__categoria_controller)
-
+        
         for categoria in self.__categoria_controller.listar_categorias():
-            categoria._Categoria__votos = {}  
+            categoria._Categoria__votos = {}
+        
+        return True, "Votação resetada com sucesso."
     
     def validar_sistema(self):
+        """Valida o sistema"""
+        if not self.verificar_autenticacao():
+            return ["Acesso negado. Faça login primeiro."]
+        
         problemas = []
 
         if not self.__membro_controller.listar_membros():
             problemas.append("Nenhum membro cadastrado no sistema.")
+        
         votadores = self.__membro_controller.listar_por_tipo('VOTADOR')
         if not votadores:
             problemas.append("Nenhum membro votador cadastrado.")
