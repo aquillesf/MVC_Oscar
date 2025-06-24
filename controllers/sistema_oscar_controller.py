@@ -70,9 +70,6 @@ class SistemaOscarController:
         except Exception as e:
             return False, f"Erro inesperado ao cadastrar membro: {str(e)}"
 
-    
-
-
     def fazer_login(self, nome, senha):
         membro = self.__membro_controller.autenticar(nome, senha)
         if membro:
