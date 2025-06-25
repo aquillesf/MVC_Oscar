@@ -1,42 +1,47 @@
 from models.categoria import Categoria
+from persistence.categoria_dao import CategoriaDAO
+
 class CategoriaController:
     def __init__(self):
-        self.__categorias = []
+        self.__dao = CategoriaDAO()
+        self.__categorias = self.__dao.listar()
         self.__criar_categorias_padrao()
-    
+
     def __criar_categorias_padrao(self):
+        categorias_existentes = [c.nome for c in self.__dao.listar()]
         categorias_padrao = [
             "Melhor Filme",
             "Melhor Diretor",
-            "Melhor Ator", 
+            "Melhor Ator",
             "Melhor Atriz",
             "Melhor Ator Coadjuvante",
             "Melhor Atriz Coadjuvante"
         ]
-        
         for nome in categorias_padrao:
-            self.__categorias.append(Categoria(nome))
-    
+            if nome not in categorias_existentes:
+                categoria = Categoria(nome)
+                self.__dao.adicionar(categoria)
+        self.__categorias = self.__dao.listar()
+
     def criar_categoria(self, nome):
         try:
             categoria = Categoria(nome)
-            self.__categorias.append(categoria)
+            self.__dao.adicionar(categoria)
+            self.__categorias = self.__dao.listar()
             return categoria
         except Exception as e:
             return None
-    
+
     def listar_categorias(self):
-        return self.__categorias
-    
+        return self.__dao.listar()
+
     def buscar_categoria(self, nome):
-        for categoria in self.__categorias:
-            if categoria.nome.lower() == nome.lower():
-                return categoria
-        return None
-    
+        return self.__dao.buscar_por_nome(nome)
+
     def adicionar_indicado(self, nome_categoria, indicado):
-        categoria = self.buscar_categoria(nome_categoria)
+        categoria = self.__dao.buscar_por_nome(nome_categoria)
         if categoria:
             categoria.adicionar_indicado(indicado)
+            self.__dao.salvar()
             return True
         return False

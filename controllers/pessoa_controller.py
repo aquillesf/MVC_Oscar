@@ -1,21 +1,22 @@
 from models.pessoa import Pessoa
+from persistence.pessoa_dao import PessoaDAO
+
 class PessoaController:
     def __init__(self):
-        self.__pessoas = []
-    
+        self.__dao = PessoaDAO()
+        self.__pessoas = self.__dao.listar()
+
     def criar_pessoa(self, nome, idade):
         try:
             pessoa = Pessoa(nome, idade)
-            self.__pessoas.append(pessoa)
+            self.__dao.adicionar(pessoa)
+            self.__pessoas = self.__dao.listar()
             return pessoa
         except Exception as e:
             return None
-    
+
     def listar_pessoas(self):
-        return self.__pessoas
-    
+        return self.__dao.listar()
+
     def buscar_pessoa(self, nome):
-        for pessoa in self.__pessoas:
-            if pessoa.nome.lower() == nome.lower():
-                return pessoa
-        return None
+        return self.__dao.buscar_por_nome(nome)

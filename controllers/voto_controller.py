@@ -1,5 +1,6 @@
 from models.voto import Voto
 class VotoController:
+    
     def __init__(self, categoria_controller):
         self.__votos = []
         self.__categoria_controller = categoria_controller
