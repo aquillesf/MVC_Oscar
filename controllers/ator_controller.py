@@ -1,5 +1,6 @@
 from models.ator import Ator
-from exceptions.oscar_exceptions import ItemNaoEncontradoException, DadosInvalidosException
+from exceptions.item_nao_encontrado_exception import ItemNaoEncontradoException
+from exceptions.dados_invalidos_exception import DadosInvalidosException
 
 class AtorController:
     def __init__(self):

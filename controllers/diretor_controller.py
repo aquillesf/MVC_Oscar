@@ -1,5 +1,6 @@
 from models.diretor import Diretor
-from exceptions.oscar_exceptions import ItemNaoEncontradoException, DadosInvalidosException
+from exceptions.item_nao_encontrado_exception import ItemNaoEncontradoException
+from exceptions.dados_invalidos_exception import DadosInvalidosException
 
 class DiretorController:
     def __init__(self):
@@ -29,7 +30,6 @@ class DiretorController:
         return True
     
     def editar_diretor(self, nome_atual, novo_nome=None, nova_idade=None, novos_filmes=None):
-        """Edita dados de um diretor"""
         diretor = self.buscar_diretor(nome_atual)
         if not diretor:
             raise ItemNaoEncontradoException("Diretor", nome_atual)
@@ -61,5 +61,4 @@ class DiretorController:
         return diretor
     
     def carregar_diretores(self, diretores_list):
-        """Carrega lista de diretores (usado pela persistência)"""
         self.__diretores = diretores_list

@@ -25,13 +25,11 @@ class IndicacaoController:
         return [i for i in self.__indicacoes if i.categoria == categoria]
     
     def deletar_indicacao(self, nome_categoria, indicado):
-        """Deleta uma indicação específica da categoria"""
         try:
             categoria = self.__categoria_controller.buscar_categoria(nome_categoria)
             if not categoria:
                 return False
             
-            # Encontrar a indicação para remover
             indicacao_para_remover = None
             for indicacao in self.__indicacoes:
                 if indicacao.categoria == categoria and indicacao.indicado == indicado:
@@ -39,14 +37,11 @@ class IndicacaoController:
                     break
             
             if indicacao_para_remover:
-                # Remover da lista de indicações
                 self.__indicacoes.remove(indicacao_para_remover)
-                
-                # Remover da categoria (assumindo que a categoria tem método para remover indicado)
+
                 if hasattr(categoria, 'remover_indicado'):
                     categoria.remover_indicado(indicado)
                 elif hasattr(categoria, '_Categoria__indicados'):
-                    # Acesso direto se não houver método público
                     if indicado in categoria._Categoria__indicados:
                         categoria._Categoria__indicados.remove(indicado)
                 

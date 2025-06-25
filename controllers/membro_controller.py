@@ -1,9 +1,8 @@
 from models.membro import Membro
-from exceptions.oscar_exceptions import (
-    MembroJaExistenteException, MembroNaoEncontradoException, 
-    SenhaIncorretaException, DadosInvalidosException
-)
-
+from exceptions.membro_ja_existente_exception import MembroJaExistenteException
+from exceptions.membro_nao_encontrado_exception import MembroNaoEncontradoException
+from exceptions.senha_incorreta_exception import SenhaIncorretaException
+from exceptions.dados_invalidos_exception import DadosInvalidosException
 class MembroController:
     def __init__(self):
         self.__membros = []
@@ -22,17 +21,7 @@ class MembroController:
         except ValueError as e:
             raise DadosInvalidosException("tipo de membro", tipo)
     
-    def excluir_membro(self, nome):
-        """Exclui um membro pelo nome"""
-        membro = self.buscar_membro(nome)
-        if not membro:
-            raise MembroNaoEncontradoException(nome)
-        
-        self.__membros.remove(membro)
-        return True
-    
     def editar_membro(self, nome_atual, novo_nome=None, novo_tipo=None):
-        """Edita dados de um membro"""
         membro = self.buscar_membro(nome_atual)
         if not membro:
             raise MembroNaoEncontradoException(nome_atual)
@@ -80,5 +69,4 @@ class MembroController:
         return [m for m in self.__membros if m.tipo == tipo]
     
     def carregar_membros(self, membros_list):
-        """Carrega lista de membros (usado pela persistência)"""
         self.__membros = membros_list

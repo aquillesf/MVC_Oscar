@@ -1,5 +1,6 @@
 from models.filme import Filme
-from exceptions.oscar_exceptions import ItemNaoEncontradoException, DadosInvalidosException
+from exceptions.item_nao_encontrado_exception import ItemNaoEncontradoException
+from exceptions.dados_invalidos_exception import DadosInvalidosException
 
 class FilmeController:
     def __init__(self, diretor_controller):
@@ -22,7 +23,6 @@ class FilmeController:
             raise DadosInvalidosException("dados do filme", str(e))
     
     def excluir_filme(self, titulo):
-        """Exclui um filme pelo título"""
         filme = self.buscar_filme(titulo)
         if not filme:
             raise ItemNaoEncontradoException("Filme", titulo)
@@ -31,7 +31,6 @@ class FilmeController:
         return True
     
     def editar_filme(self, titulo_atual, novo_titulo=None, novo_ano=None, novo_genero=None, nova_descricao=None):
-        """Edita dados de um filme"""
         filme = self.buscar_filme(titulo_atual)
         if not filme:
             raise ItemNaoEncontradoException("Filme", titulo_atual)
@@ -66,5 +65,4 @@ class FilmeController:
         return [f for f in self.__filmes if f.genero.lower() == genero.lower()]
     
     def carregar_filmes(self, filmes_list):
-        """Carrega lista de filmes (usado pela persistência)"""
         self.__filmes = filmes_list
