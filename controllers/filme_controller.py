@@ -31,20 +31,30 @@ class FilmeController:
         self.__filmes = self.__dao.listar()
         return True
 
-    def editar_filme(self, titulo_atual, novo_titulo=None, novo_ano=None, novo_genero=None, nova_descricao=None):
+    def editar_filme(self, titulo_atual, novo_titulo=None, novo_ano=None, novo_genero=None, novo_diretor_nome=None, nova_descricao=None):
         filme = self.__dao.buscar_por_titulo(titulo_atual)
         if not filme:
             raise ItemNaoEncontradoException("Filme", titulo_atual)
+        
         if novo_titulo and novo_titulo.strip():
             filme._Filme__titulo = novo_titulo.strip()
+        
         if novo_ano and isinstance(novo_ano, int) and 1900 <= novo_ano <= 2030:
             filme._Filme__ano = novo_ano
+        
         if novo_genero and novo_genero.strip():
             filme._Filme__genero = novo_genero.strip()
+        
+        if novo_diretor_nome and novo_diretor_nome.strip():
+            novo_diretor = self.__diretor_controller.encontrar_ou_criar_diretor(novo_diretor_nome)
+            filme._Filme__diretor = novo_diretor
+        
         if nova_descricao is not None:
             filme._Filme__descricao = nova_descricao.strip()
+        
         self.__dao.salvar()
         return filme
+
 
     def listar_filmes(self):
         return self.__dao.listar()

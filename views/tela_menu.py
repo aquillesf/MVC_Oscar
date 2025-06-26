@@ -17,6 +17,7 @@ class TelaMenu:
                 [sg.Button('Adicionar Filme', size=(20, 2), font=('Arial', 10))],
                 [sg.Button('Adicionar Ator/Atriz', size=(20, 2), font=('Arial', 10))],
                 [sg.Button('Adicionar Indicação', size=(20, 2), font=('Arial', 10))],
+                [sg.Button('Editar Filme', size=(20, 2), font=('Arial', 10), button_color=('white', 'darkblue'))],
                 [sg.Button('Deletar Filme', size=(20, 2), font=('Arial', 10), button_color=('white', 'darkred'))],
                 [sg.Button('Deletar Ator/Atriz', size=(20, 2), font=('Arial', 10), button_color=('white', 'darkred'))],
                 [sg.Button('Deletar Indicação', size=(20, 2), font=('Arial', 10), button_color=('white', 'darkred'))],
@@ -62,6 +63,13 @@ class TelaMenu:
             elif event == 'Alterar Senha':
                 window.close()
                 resultado = tela_principal.tela_alterar_senha()
+                if resultado:
+                    self.exibir()
+                break
+
+            elif event == 'Editar Filme':
+                window.close()
+                resultado = tela_principal.tela_editar_filme()
                 if resultado:
                     self.exibir()
                 break

@@ -542,6 +542,128 @@ class TelaPrincipal:
 
         window.close()
 
+    def tela_editar_filme(self):
+        filmes = self.sistema.filme_controller.listar_filmes()
+        if not filmes:
+            sg.popup('Nenhum filme cadastrado!', title='Aviso')
+            return True
+        
+        filmes_info = [f"{filme.titulo} ({filme.ano}) - {filme.diretor.nome}" for filme in filmes]
+
+        layout_selecao = [
+            [sg.Text('EDITAR FILME', font=('Arial', 16, 'bold'))],
+            [sg.Text('')],
+            [sg.Text('Selecione o filme a ser editado:')],
+            [sg.Listbox(filmes_info, size=(60, 10), key='filme')],
+            [sg.Text('')],
+            [sg.Button('Próximo', font=('Arial', 10)), sg.Button('Voltar', font=('Arial', 10))],
+        ]
+        
+        window = sg.Window('Selecionar Filme', layout_selecao)
+        
+        while True:
+            event, values = window.read()
+            
+            if event in (sg.WIN_CLOSED, 'Voltar'):
+                window.close()
+                return True
+            
+            elif event == 'Próximo':
+                if values['filme']:
+                    filme_selecionado = values['filme'][0]
+                    titulo_atual = filme_selecionado.split(' (')[0]
+                    window.close()
+                    return self._tela_editar_filme_form(titulo_atual)
+                else:
+                    sg.popup_error('Selecione um filme!')
+        
+        window.close()
+
+    def _tela_editar_filme_form(self, titulo_atual):
+
+        filme = self.sistema.filme_controller.buscar_filme(titulo_atual)
+        if not filme:
+            sg.popup_error('Filme não encontrado!')
+            return True
+        
+        layout = [
+            [sg.Text('EDITAR FILME', font=('Arial', 16, 'bold'))],
+            [sg.Text(f'Editando: {filme.titulo}', font=('Arial', 12, 'italic'))],
+            [sg.Text('')],
+            [sg.Text('Novo Título:', size=(12, 1)), 
+            sg.Input(default_text=filme.titulo, key='titulo', size=(30, 1))],
+            [sg.Text('Novo Ano:', size=(12, 1)), 
+            sg.Input(default_text=str(filme.ano), key='ano', size=(30, 1))],
+            [sg.Text('Novo Gênero:', size=(12, 1)), 
+            sg.Input(default_text=filme.genero, key='genero', size=(30, 1))],
+            [sg.Text('Novo Diretor:', size=(12, 1)), 
+            sg.Input(default_text=filme.diretor.nome, key='diretor', size=(30, 1))],
+            [sg.Text('Nova Descrição:', size=(12, 1)), 
+            sg.Multiline(default_text=filme.descricao, key='descricao', size=(30, 4))],
+            [sg.Text('')],
+            [sg.Text('💡 Dica: Deixe em branco os campos que não deseja alterar', 
+                    font=('Arial', 9), text_color='gray')],
+            [sg.Text('')],
+            [sg.Button('Salvar Alterações', font=('Arial', 10)), 
+            sg.Button('Cancelar', font=('Arial', 10))],
+        ]
+        
+        window = sg.Window('Editar Filme', layout)
+        
+        while True:
+            event, values = window.read()
+            
+            if event in (sg.WIN_CLOSED, 'Cancelar'):
+                window.close()
+                return True
+            
+            elif event == 'Salvar Alterações':
+                try:
+
+                    novo_titulo = values['titulo'].strip() if values['titulo'].strip() != filme.titulo else None
+                    novo_ano = None
+                    if values['ano'].strip() and values['ano'].strip() != str(filme.ano):
+                        novo_ano = int(values['ano'])
+                    
+                    novo_genero = values['genero'].strip() if values['genero'].strip() != filme.genero else None
+                    novo_diretor = values['diretor'].strip() if values['diretor'].strip() != filme.diretor.nome else None
+                    nova_descricao = values['descricao'].strip() if values['descricao'].strip() != filme.descricao else None
+
+                    if not any([novo_titulo, novo_ano, novo_genero, novo_diretor, nova_descricao]):
+                        sg.popup('Nenhuma alteração foi feita!', title='Aviso')
+                        continue
+                    
+                    filme_editado = self.sistema.filme_controller.editar_filme(
+                        titulo_atual, novo_titulo, novo_ano, novo_genero, 
+                        novo_diretor, nova_descricao
+                    )
+                    
+                    alteracoes = []
+                    if novo_titulo: alteracoes.append(f"Título: {novo_titulo}")
+                    if novo_ano: alteracoes.append(f"Ano: {novo_ano}")
+                    if novo_genero: alteracoes.append(f"Gênero: {novo_genero}")
+                    if novo_diretor: alteracoes.append(f"Diretor: {novo_diretor}")
+                    if nova_descricao: alteracoes.append("Descrição atualizada")
+                    
+                    mensagem_sucesso = f'Filme editado com sucesso!\n\nAlterações realizadas:\n' + '\n'.join(alteracoes)
+                    sg.popup(mensagem_sucesso, title='Sucesso')
+                    window.close()
+                    return True
+                    
+                except ValueError:
+                    sg.popup_error('Ano deve ser um número válido!')
+                except DadosInvalidosException as e:
+                    sg.popup_error(f'Dados inválidos: {e.message}')
+                except ItemNaoEncontradoException as e:
+                    sg.popup_error(f'Erro: {e.message}')
+                except PermissaoNegadaException as e:
+                    sg.popup_error(f'Erro: {e.message}')
+                except Exception as e:
+                    sg.popup_error(f'Erro ao editar filme: {str(e)}')
+            
+        window.close()
+
+
     def tela_deletar_indicacao(self):
         indicacoes = self.sistema.indicacao_controller.listar_indicacoes()
         if not indicacoes:
