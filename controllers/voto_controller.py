@@ -1,9 +1,18 @@
 from models.voto import Voto
+from persistence.voto_dao import VotoDAO
+
 class VotoController:
     
     def __init__(self, categoria_controller):
-        self.__votos = []
+        self.__dao = VotoDAO()
+        self.__votos_cache = {} 
         self.__categoria_controller = categoria_controller
+        self.__carregar_cache()
+    
+    def __carregar_cache(self):
+        for voto in self.__dao.listar():
+            chave = (voto.membro.nome.lower(), voto.categoria.nome.lower())
+            self.__votos_cache[chave] = voto
     
     def registrar_voto(self, membro, nome_categoria, indicado):
         if not membro.pode_votar():
@@ -16,19 +25,25 @@ class VotoController:
         if indicado not in categoria.indicados:
             return False
         
-        if any(v.membro == membro and v.categoria == categoria for v in self.__votos):
+        chave = (membro.nome.lower(), categoria.nome.lower())
+        if chave in self.__votos_cache:
             return False
         
         voto = Voto(membro, categoria, indicado)
-        self.__votos.append(voto)
+        self.__dao.adicionar(voto)
+        self.__votos_cache[chave] = voto
         categoria.registrar_voto(indicado, membro)
         return True
     
     def listar_votos(self):
-        return self.__votos
+        return self.__dao.listar()
     
     def contar_votos_categoria(self, categoria):
-        votos_categoria = [v for v in self.__votos if v.categoria == categoria]
+        votos_categoria = []
+        for (membro_nome, cat_nome), voto in self.__votos_cache.items():
+            if cat_nome == categoria.nome.lower():
+                votos_categoria.append(voto)
+        
         contagem = {}
         for voto in votos_categoria:
             if isinstance(voto.indicado, str):

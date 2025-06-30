@@ -1,72 +1,51 @@
-from models.filme import Filme
-from exceptions.item_nao_encontrado_exception import ItemNaoEncontradoException
-from exceptions.dados_invalidos_exception import DadosInvalidosException
-from persistence.filme_dao import FilmeDAO
+from models.indicacao import Indicacao
+from persistence.indicacao_dao import IndicacaoDAO
 
-class FilmeController:
-    def __init__(self, diretor_controller):
-        self.__dao = FilmeDAO()
-        self.__filmes = self.__dao.listar()
-        self.__diretor_controller = diretor_controller
+class IndicacaoController:
+    def __init__(self, categoria_controller):
+        self.__dao = IndicacaoDAO()
+        self.__indicacoes = self.__dao.listar()
+        self.__categoria_controller = categoria_controller
 
-    def criar_filme(self, titulo, ano, genero, diretor_nome, descricao=""):
-        if not titulo or not titulo.strip():
-            raise DadosInvalidosException("título", titulo)
-        if not isinstance(ano, int) or ano < 1900 or ano > 2030:
-            raise DadosInvalidosException("ano", ano)
+    def criar_indicacao(self, nome_categoria, indicado):
+        categoria = self.__categoria_controller.buscar_categoria(nome_categoria)
+        if not categoria:
+            return None
         try:
-            diretor = self.__diretor_controller.encontrar_ou_criar_diretor(diretor_nome)
-            filme = Filme(titulo.strip(), ano, genero.strip(), diretor, descricao.strip())
-            self.__dao.adicionar(filme)
-            self.__filmes = self.__dao.listar()
-            return filme
+            indicacao = Indicacao(categoria, indicado)
+            self.__dao.adicionar(indicacao)
+            categoria.adicionar_indicado(indicado)
+            self.__indicacoes = self.__dao.listar()
+            return indicacao
         except Exception as e:
-            raise DadosInvalidosException("dados do filme", str(e))
+            return None
 
-    def excluir_filme(self, titulo):
-        filme = self.__dao.buscar_por_titulo(titulo)
-        if not filme:
-            raise ItemNaoEncontradoException("Filme", titulo)
-        self.__dao.remover(filme)
-        self.__filmes = self.__dao.listar()
-        return True
-
-    def editar_filme(self, titulo_atual, novo_titulo=None, novo_ano=None, novo_genero=None, novo_diretor_nome=None, nova_descricao=None):
-        filme = self.__dao.buscar_por_titulo(titulo_atual)
-        if not filme:
-            raise ItemNaoEncontradoException("Filme", titulo_atual)
-        
-        if novo_titulo and novo_titulo.strip():
-            filme._Filme__titulo = novo_titulo.strip()
-        
-        if novo_ano and isinstance(novo_ano, int) and 1900 <= novo_ano <= 2030:
-            filme._Filme__ano = novo_ano
-        
-        if novo_genero and novo_genero.strip():
-            filme._Filme__genero = novo_genero.strip()
-        
-        if novo_diretor_nome and novo_diretor_nome.strip():
-            novo_diretor = self.__diretor_controller.encontrar_ou_criar_diretor(novo_diretor_nome)
-            filme._Filme__diretor = novo_diretor
-        
-        if nova_descricao is not None:
-            filme._Filme__descricao = nova_descricao.strip()
-        
-        self.__dao.salvar()
-        return filme
-
-
-    def listar_filmes(self):
+    def listar_indicacoes(self):
         return self.__dao.listar()
 
-    def buscar_filme(self, titulo):
-        return self.__dao.buscar_por_titulo(titulo)
+    def listar_por_categoria(self, categoria):
+        return [i for i in self.__dao.listar() if i.categoria == categoria]
 
-    def listar_por_ano(self, ano):
-        return [f for f in self.__dao.listar() if f.ano == ano]
-
-    def listar_por_genero(self, genero):
-        return [f for f in self.__dao.listar() if f.genero.lower() == genero.lower()]
-
-    def carregar_filmes(self, filmes_list):
-        pass  
+    def deletar_indicacao(self, nome_categoria, indicado):
+        try:
+            categoria = self.__categoria_controller.buscar_categoria(nome_categoria)
+            if not categoria:
+                return False
+            indicacao_para_remover = None
+            for indicacao in self.__dao.listar():
+                if indicacao.categoria == categoria and indicacao.indicado == indicado:
+                    indicacao_para_remover = indicacao
+                    break
+            if indicacao_para_remover:
+                self.__dao.remover(indicacao_para_remover)
+                if hasattr(categoria, 'remover_indicado'):
+                    categoria.remover_indicado(indicado)
+                elif hasattr(categoria, '_Categoria__indicados'):
+                    if indicado in categoria._Categoria__indicados:
+                        categoria._Categoria__indicados.remove(indicado)
+                self.__indicacoes = self.__dao.listar()
+                return True
+            return False
+        except Exception as e:
+            print(f"Erro ao deletar indicação: {str(e)}")
+            return False

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 class DAOBase(ABC):
     def __init__(self, arquivo):
         self.__arquivo = arquivo
-        self.__dados = []
+        self.__cache = {} 
         self.__criar_diretorio()
         self.carregar_dados()
 
@@ -17,7 +17,7 @@ class DAOBase(ABC):
     def salvar_dados(self):
         try:
             with open(self.__arquivo, 'wb') as arquivo:
-                pickle.dump(self.__dados, arquivo)
+                pickle.dump(self.__cache, arquivo)
         except Exception as e:
             raise Exception(f"Erro ao salvar dados: {str(e)}")
 
@@ -25,33 +25,40 @@ class DAOBase(ABC):
         try:
             if os.path.exists(self.__arquivo):
                 with open(self.__arquivo, 'rb') as arquivo:
-                    self.__dados = pickle.load(arquivo)
+                    self.__cache = pickle.load(arquivo)
             else:
-                self.__dados = []
+                self.__cache = {}
         except Exception as e:
-            self.__dados = []
+            self.__cache = {}
             print(f"Aviso: Erro ao carregar dados de {self.__arquivo}: {str(e)}")
 
-    def adicionar(self, objeto):
-        if objeto not in self.__dados:
-            self.__dados.append(objeto)
+    def adicionar(self, chave, objeto):
+        self.__cache[chave] = objeto
+        self.salvar_dados()
+        return True
+
+    def remover(self, chave):
+        if chave in self.__cache:
+            del self.__cache[chave]
             self.salvar_dados()
             return True
         return False
 
-    def remover(self, objeto):
-        if objeto in self.__dados:
-            self.__dados.remove(objeto)
-            self.salvar_dados()
-            return True
-        return False
+    def buscar(self, chave):
+        return self.__cache.get(chave)
 
     def listar_todos(self):
-        return self.__dados.copy()
+        return list(self.__cache.values())
+
+    def listar_chaves(self):
+        return list(self.__cache.keys())
 
     def limpar_dados(self):
-        self.__dados = []
+        self.__cache = {}
         self.salvar_dados()
+
+    def existe(self, chave):
+        return chave in self.__cache
 
     @abstractmethod
     def buscar_por_id(self, id):

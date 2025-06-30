@@ -4,28 +4,39 @@ import os
 class MembroDAO:
     def __init__(self, arquivo='dados/membros.pkl'):
         self.arquivo = arquivo
-        self.membros = self.carregar()
+        self.__cache = {}  
+        self.carregar()
 
     def salvar(self):
         os.makedirs(os.path.dirname(self.arquivo), exist_ok=True)
         with open(self.arquivo, 'wb') as f:
-            pickle.dump(self.membros, f)
+            pickle.dump(self.__cache, f)
 
     def carregar(self):
         if os.path.exists(self.arquivo):
-            with open(self.arquivo, 'rb') as f:
-                return pickle.load(f)
-        return []
+            try:
+                with open(self.arquivo, 'rb') as f:
+                    self.__cache = pickle.load(f)
+            except:
+                self.__cache = {}
+        else:
+            self.__cache = {}
 
     def adicionar(self, membro):
-        self.membros.append(membro)
+        chave = membro.nome.lower()
+        self.__cache[chave] = membro
         self.salvar()
 
     def listar(self):
-        return self.membros
+        return list(self.__cache.values())
 
     def buscar_por_nome(self, nome):
-        for membro in self.membros:
-            if membro.nome.lower() == nome.lower():
-                return membro
-        return None
+        return self.__cache.get(nome.lower())
+
+    def remover(self, membro):
+        chave = membro.nome.lower()
+        if chave in self.__cache:
+            del self.__cache[chave]
+            self.salvar()
+            return True
+        return False

@@ -4,32 +4,39 @@ import os
 class DiretorDAO:
     def __init__(self, arquivo='dados/diretores.pkl'):
         self.arquivo = arquivo
-        self.diretores = self.carregar()
+        self.__cache = {}  
+        self.carregar()
 
     def salvar(self):
         os.makedirs(os.path.dirname(self.arquivo), exist_ok=True)
         with open(self.arquivo, 'wb') as f:
-            pickle.dump(self.diretores, f)
+            pickle.dump(self.__cache, f)
 
     def carregar(self):
         if os.path.exists(self.arquivo):
-            with open(self.arquivo, 'rb') as f:
-                return pickle.load(f)
-        return []
+            try:
+                with open(self.arquivo, 'rb') as f:
+                    self.__cache = pickle.load(f)
+            except:
+                self.__cache = {}
+        else:
+            self.__cache = {}
 
     def adicionar(self, diretor):
-        self.diretores.append(diretor)
+        chave = diretor.nome.lower()
+        self.__cache[chave] = diretor
         self.salvar()
 
     def remover(self, diretor):
-        self.diretores.remove(diretor)
-        self.salvar()
+        chave = diretor.nome.lower()
+        if chave in self.__cache:
+            del self.__cache[chave]
+            self.salvar()
+            return True
+        return False
 
     def listar(self):
-        return self.diretores
+        return list(self.__cache.values())
 
     def buscar_por_nome(self, nome):
-        for diretor in self.diretores:
-            if diretor.nome.lower() == nome.lower():
-                return diretor
-        return None
+        return self.__cache.get(nome.lower())

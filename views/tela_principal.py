@@ -601,9 +601,6 @@ class TelaPrincipal:
             [sg.Text('Nova Descrição:', size=(12, 1)), 
             sg.Multiline(default_text=filme.descricao, key='descricao', size=(30, 4))],
             [sg.Text('')],
-            [sg.Text('💡 Dica: Deixe em branco os campos que não deseja alterar', 
-                    font=('Arial', 9), text_color='gray')],
-            [sg.Text('')],
             [sg.Button('Salvar Alterações', font=('Arial', 10)), 
             sg.Button('Cancelar', font=('Arial', 10))],
         ]

@@ -4,32 +4,39 @@ import os
 class FilmeDAO:
     def __init__(self, arquivo='dados/filmes.pkl'):
         self.arquivo = arquivo
-        self.filmes = self.carregar()
+        self.__cache = {} 
+        self.carregar()
 
     def salvar(self):
         os.makedirs(os.path.dirname(self.arquivo), exist_ok=True)
         with open(self.arquivo, 'wb') as f:
-            pickle.dump(self.filmes, f)
+            pickle.dump(self.__cache, f)
 
     def carregar(self):
         if os.path.exists(self.arquivo):
-            with open(self.arquivo, 'rb') as f:
-                return pickle.load(f)
-        return []
+            try:
+                with open(self.arquivo, 'rb') as f:
+                    self.__cache = pickle.load(f)
+            except:
+                self.__cache = {}
+        else:
+            self.__cache = {}
 
     def adicionar(self, filme):
-        self.filmes.append(filme)
+        chave = filme.titulo.lower()
+        self.__cache[chave] = filme
         self.salvar()
 
     def remover(self, filme):
-        self.filmes.remove(filme)
-        self.salvar()
+        chave = filme.titulo.lower()
+        if chave in self.__cache:
+            del self.__cache[chave]
+            self.salvar()
+            return True
+        return False
 
     def listar(self):
-        return self.filmes
+        return list(self.__cache.values())
 
     def buscar_por_titulo(self, titulo):
-        for filme in self.filmes:
-            if filme.titulo.lower() == titulo.lower():
-                return filme
-        return None
+        return self.__cache.get(titulo.lower())

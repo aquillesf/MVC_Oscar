@@ -8,7 +8,16 @@ from persistence.membro_dao import MembroDAO
 class MembroController:
     def __init__(self):
         self.__dao = MembroDAO()
-        self.__membros = self.__dao.listar()
+        self.__cache_por_tipo = {}
+        self.__atualizar_cache_tipo()
+
+    def __atualizar_cache_tipo(self):
+        self.__cache_por_tipo = {}
+        for membro in self.__dao.listar():
+            tipo = membro.tipo
+            if tipo not in self.__cache_por_tipo:
+                self.__cache_por_tipo[tipo] = []
+            self.__cache_por_tipo[tipo].append(membro)
 
     def criar_membro(self, nome, tipo, senha):
         if not nome or not nome.strip():
@@ -18,7 +27,7 @@ class MembroController:
         try:
             membro = Membro(nome.strip(), tipo, senha)
             self.__dao.adicionar(membro)
-            self.__membros = self.__dao.listar()
+            self.__atualizar_cache_tipo()
             return membro
         except ValueError as e:
             raise DadosInvalidosException("tipo de membro", tipo)
@@ -27,13 +36,19 @@ class MembroController:
         membro = self.__dao.buscar_por_nome(nome_atual)
         if not membro:
             raise MembroNaoEncontradoException(nome_atual)
+        
         if novo_nome and novo_nome.strip() and novo_nome != nome_atual:
             if self.__dao.buscar_por_nome(novo_nome):
                 raise MembroJaExistenteException(novo_nome)
+            self.__dao.remover(membro)
             membro._Membro__nome = novo_nome.strip()
+            self.__dao.adicionar(membro)
+        
         if novo_tipo and novo_tipo in Membro.TIPOS:
             membro._Membro__tipo = novo_tipo
+        
         self.__dao.salvar()
+        self.__atualizar_cache_tipo()
         return membro
 
     def listar_membros(self):
@@ -60,5 +75,4 @@ class MembroController:
         return True
 
     def listar_por_tipo(self, tipo):
-        return [m for m in self.__dao.listar() if m.tipo == tipo]
-
+        return self.__cache_por_tipo.get(tipo, [])
