@@ -15,7 +15,7 @@ python --version
 📦 1. Instalar Dependências
 Pode ser necessário instalar o Tkinter manualmente:
 
-bash```
+```bash
 sudo apt-get install python3-tk
 ```
 No Windows, geralmente o Tkinter já vem com a instalação padrão do Python.
