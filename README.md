@@ -33,8 +33,9 @@ e execute:
 python main.py
 ```
 
-🗂️ Estrutura do Projeto (Exemplo de Organização MVC)
+🗂️ Estrutura do Projeto (Exemplo de Organização):
 
+```
 /projeto/
 │
 ├── controllers/
@@ -50,4 +51,4 @@ python main.py
 ├── views/
 │   └── Interface do Usuário do projeto.
 └── README.md
-
+```
