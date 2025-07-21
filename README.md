@@ -1,4 +1,4 @@
-Este é um trabalho da matéria de Desenvolvimento de Sistemas Orientados a Objetos da UFSC (Universidade Federal de Santa Catarina).
+Este é um Projeto feito durante as aulas da matéria de Desenvolvimento de Sistemas Orientados a Objetos da UFSC (Universidade Federal de Santa Catarina).
 Neste projeto, criei um sistema do 0 de votações usando Python, Tkinter e Pickle para persistência de dados.
 O sistema é feito na arquitetura MVC (Model, View Controller) com camadas de exceção de erros e GUI.
 
