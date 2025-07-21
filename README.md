@@ -49,6 +49,6 @@ python main.py
 ├── persistence/
 │   └── Aqui está o tratamento de dados e o "save" enviado para a pasta "dados/".
 ├── views/
-│   └── Interface do Usuário do projeto.
+│   └── Interface de Usuário do projeto.
 └── README.md
 ```
