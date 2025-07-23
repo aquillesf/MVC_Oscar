@@ -40,16 +40,16 @@ python main.py
 /projeto/
 │
 ├── controllers/
-│   └── Os controles de dados da aplicação estão aqui
+│   └──  #Os controles de dados da aplicação estão aqui
 ├── dados/
-│   └── Aqui é onde estão guardados os dados da aplicação
+│   └──  #Aqui é onde estão guardados os dados da aplicação
 ├── exceptions/
-│   └── Onde estão todas as exceções de erros
+│   └──  #Onde estão todas as exceções de erros
 ├── models/
-│   └── Modelos das classes do projeto.
+│   └──  #Modelos das classes do projeto.
 ├── persistence/
-│   └── Aqui está o tratamento de dados e o "save" enviado para a pasta "dados/".
+│   └──  #Aqui está o tratamento de dados e o "save" enviado para a pasta "dados/".
 ├── views/
-│   └── Interface de Usuário do projeto.
+│   └──  #Interface de Usuário do projeto.
 └── README.md
 ```
